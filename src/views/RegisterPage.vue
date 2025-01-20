@@ -20,7 +20,7 @@ export default {
           .then(response => {
             this.message = response.data;
             this.successful = true;
-            this.$router.push({'name': 'main'});
+            this.$router.push({'name': 'login'});
           })
           .catch(error => {
             this.message = error.response.data;
@@ -36,14 +36,6 @@ export default {
     <h2 class="text-center mt-3">Регистрация</h2>
     <form @submit.prevent="register">
       <div class="form-group d-flex flex-column gap-2">
-        <label for="username">Имя пользователя:</label>
-        <input
-            id="username"
-            v-model="user.username"
-            type="text"
-            class="form-control"
-            required
-        />
         <label for="email">Электронная почта:</label>
         <input
             id="email"

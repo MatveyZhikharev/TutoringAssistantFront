@@ -5,12 +5,30 @@ export default {
   data() {
     return {
       events: [],
-      eventToUpdate: {},
+      eventToUpdate: {
+        folowed_user:
+            {
+              id: -1
+            }
+      },
       eventToCreate: {},
+      relatedUsers: [],
       redacted: false,
     };
   },
   methods: {
+    formatDate(date) {
+      let d = new Date(date)
+
+      const hours = d.getHours().toString().padStart(2, '0');
+      const minutes = d.getMinutes().toString().padStart(2, '0');
+
+      const day = d.getDate().toString().padStart(2, '0');
+      const month = (d.getMonth() + 1).toString().padStart(2, '0');
+      const year = d.getFullYear();
+
+      return `${hours}:${minutes} ${day}.${month}.${year}`;
+    },
     goPage(name) {
       this.$router.push({
         'name': name
@@ -19,6 +37,25 @@ export default {
     eventUpdate(event) {
       this.eventToUpdate = event;
       this.redacted = true;
+    },
+    async loadRelatedUsers() {
+      if (localStorage.getItem('role') === 'ROLE_STUDENT') {
+        await axios.get('/student/teachers', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.accessToken}`
+          }
+        }).then(response => {
+          this.relatedUsers = response.data.teachers;
+        })
+      } else if (localStorage.getItem('role') === 'ROLE_TEACHER') {
+        await axios.get('/teacher/students', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.accessToken}`
+          }
+        }).then(response => {
+          this.relatedUsers = response.data.students;
+        })
+      }
     },
     async loadEvents() {
       await axios.get('/myevents', {
@@ -38,25 +75,32 @@ export default {
         this.loadEvents();
       })
     },
-    async createEvent() {
+    async createEvent($evt) {
+      $evt.preventDefault();
       this.eventToCreate.date_created = new Date();
       await axios.post('/addevent', this.eventToCreate, {
         headers: {
           'Authorization': `Bearer ${localStorage.accessToken}`
         }
+      }).then(response => {
+        this.loadEvents();
       })
     },
-    async updateEvent() {
+    async updateEvent($evt) {
+      $evt.preventDefault();
       this.eventToUpdate.date_created = new Date();
       await axios.put('/update/event', this.eventToUpdate, {
         headers: {
           'Authorization': `Bearer ${localStorage.accessToken}`
         }
+      }).then(response => {
+        this.loadEvents();
       })
     },
   },
   mounted() {
     this.loadEvents();
+    this.loadRelatedUsers();
   },
 };
 </script>
@@ -79,11 +123,11 @@ export default {
         <div class="col-2">{{ event.name }}</div>
         <div class="col-3">{{ event.description }}</div>
         <div class="col-2">{{ event.folowed_user.email }}</div>
-        <div class="col-1">{{ event.date }}</div>
-        <div class="col-1">{{ event.duration }}</div>
+        <div class="col-1">{{ formatDate(event.date) }}</div>
+        <div class="col-1">{{ formatDate(event.duration) }}</div>
         <div class="col-1">
           <div class="text-danger" @click="deleteEvent(event.id)">Удалить</div>
-          <div class="text-success" @click="eventUpdate(event)">Обновить</div>
+          <div @click="eventUpdate(event)"><a class="text-success" href="#update">Обновить</a></div>
         </div>
       </div>
     </div>
@@ -112,15 +156,25 @@ export default {
                v-model="eventToCreate.description">
       </div>
       <div class="mb-3">
-        <label for="gettingPersonId" class="form-label">ID получателя</label>
-        <input type="number" class="form-control" id="gettingPersonId" name="gettingPersonId"
-               placeholder="Введите ID пользователя" required
-               v-model="eventToCreate.getingPersonId">
+        <label for="gettingPersonId" class="form-label">Получатель</label>
+        <select
+            v-model="eventToCreate.getingPersonId"
+            class="form-select"
+            id="gettingPersonId"
+            required>
+          <option
+              v-for="user in relatedUsers"
+              :value="user.user.id">{{ user.user.email }}
+          </option>
+        </select>
       </div>
-      <button class="btn btn-primary" @click="createEvent">Создать событие</button>
+      <button class="btn btn-secondary" @click="createEvent">Создать событие</button>
     </form>
 
-    <h2 class="text-center my-5" :class="{
+    <h2
+        id="update"
+        class="text-center my-5"
+        :class="{
       'd-none': !redacted,
     }">Обновить событие</h2>
     <form id="eventForm" :class="{
@@ -148,11 +202,20 @@ export default {
                v-model="eventToUpdate.description">
       </div>
       <div class="mb-3">
-        <label for="gettingPersonId" class="form-label">ID получателя</label>
-        <input type="number" class="form-control" id="gettingPersonId" name="gettingPersonId" required
-               v-model="eventToUpdate.getingPersonId">
+        <label for="gettingPersonId" class="form-label">Получатель</label>
+        <select
+            v-model="eventToUpdate.getingPersonId"
+            class="form-select"
+            id="gettingPersonId"
+            required>
+          <option
+              v-for="user in relatedUsers"
+              :value="user.user.id"
+              :selected="user.user.id === eventToUpdate.folowed_user.id">{{ user.user.email }}
+          </option>
+        </select>
       </div>
-      <button class="btn btn-primary" @click="updateEvent">Сохранить событие</button>
+      <button class="btn btn-secondary" @click="updateEvent">Сохранить событие</button>
     </form>
   </div>
 </template>

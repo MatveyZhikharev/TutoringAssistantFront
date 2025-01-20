@@ -2,7 +2,8 @@
 export default {
   data() {
     return {
-      email: ''
+      email: '',
+      role: ''
     };
   },
   methods: {
@@ -14,6 +15,7 @@ export default {
   },
   mounted() {
     this.email = localStorage.getItem('email');
+    this.role = localStorage.getItem('role');
   }
 }
 
@@ -46,7 +48,7 @@ export default {
           </li>
           <li>
             <a
-                v-if="this.$cookies.get('role') === 'ROLE_TEACHER'"
+                v-if="role === 'ROLE_TEACHER'"
                 class="nav-link px-2"
                 @click="goPage('students')"
                 :class="{

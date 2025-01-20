@@ -23,7 +23,8 @@ export default {
         this.user = response.data.user;
       })
     },
-    async updateProfile() {
+    async updateProfile($evt) {
+      $evt.preventDefault();
       await axios.put('/profile/update', {
         avatar: this.user.avatar,
         firstName: this.user.firstName,
@@ -33,6 +34,8 @@ export default {
         headers: {
           'Authorization': `Bearer ${localStorage.accessToken}`
         }
+      }).then(response => {
+        this.loadProfile();
       })
     },
   },
@@ -47,24 +50,24 @@ export default {
     <h2 class="mb-4">Профиль пользователя</h2>
     <div class="mb-3">
       <label for="email" class="form-label fw-bold">ID:</label>
-      <input type="email" id="email" class="form-control" :value="user.id" disabled>
+      <input type="email" id="email" class="form-control" v-model="user.id" disabled>
     </div>
     <div class="mb-3">
       <label for="avatar" class="form-label fw-bold">Аватар:</label>
       <img v-if="user.avatar" :src="user.avatar" alt="аватар" width="256px">
-      <input type="url" id="avatar" class="form-control" :value="user.avatar">
+      <input type="url" id="avatar" class="form-control" v-model="user.avatar">
     </div>
     <div class="mb-3">
       <label for="email" class="form-label fw-bold">Email:</label>
-      <input type="email" id="email" class="form-control" :value="user.email" disabled>
+      <input type="email" id="email" class="form-control" v-model="user.email" disabled>
     </div>
     <div class="mb-3">
       <label for="firstName" class="form-label fw-bold">Имя:</label>
-      <input type="text" id="firstName" class="form-control" :value="user.firstName">
+      <input type="text" id="firstName" class="form-control" v-model="user.firstName">
     </div>
     <div class="mb-3">
       <label for="lastName" class="form-label fw-bold">Фамилия:</label>
-      <input type="text" id="lastName" class="form-control" :value="user.lastName">
+      <input type="text" id="lastName" class="form-control" v-model="user.lastName">
     </div>
     <div class="mb-3">
       <label for="role" class="form-label fw-bold">Роль:</label>
@@ -80,7 +83,7 @@ export default {
     </div>
     <div class="mb-3">
       <label for="additionalInfo" class="form-label fw-bold">Дополнительная информация:</label>
-      <textarea id="additionalInfo" class="form-control" rows="3" v-model="user.extra_info"></textarea>
+      <textarea id="additionalInfo" class="form-control" rows="3" v-model="user.extraInfo"></textarea>
     </div>
     <button class="btn btn-secondary" @click="updateProfile">Обновить профиль</button>
   </form>
